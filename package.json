@@ -2,7 +2,7 @@
   "name": "memcard-autoupload",
   "version": "0.1.0",
   "description": "Tool to discover and automatically copy new files from an external storage device (e.g. a memory card) to a defined location on a local file system.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
