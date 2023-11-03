@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
+    "lint": "eslint . --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,6 +27,11 @@
   "devDependencies": {
     "@tsconfig/node20": "^20.1.2",
     "@types/node": "^20.8.10",
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/parser": "^6.9.1",
+    "eslint": "^8.52.0",
+    "eslint-config-prettier": "^9.0.0",
+    "prettier": "3.0.3",
     "typescript": "~5.2.2"
   }
 }
