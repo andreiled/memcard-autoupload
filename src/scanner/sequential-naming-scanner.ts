@@ -5,6 +5,13 @@ import { indexOfNextElement } from "../utils/arrays";
 import { getPathElements, pathStartsWith } from "../utils/path";
 import { StringUtils } from "../utils/string";
 
+export interface SequentialNamingScannerProps {
+    /**
+     * Names of directories that should be completely ignored by `SequentialNamingScanner`.
+     */
+    readonly ignoreDirs: readonly string[];
+}
+
 export interface ScanParams {
     /**
      * Source directory to scan.
@@ -23,6 +30,12 @@ export interface ScanParams {
  * in order to identify all files newer than some previously processed file.
  */
 export class SequentialNamingScanner {
+    private readonly ignoreDirs: readonly string[];
+
+    constructor(props: SequentialNamingScannerProps) {
+        this.ignoreDirs = [...props.ignoreDirs];
+    }
+
     /**
      * @param params
      * @returns a `Promise` that resolves to an array of all new files' paths [relative to the specified source directory]
@@ -32,7 +45,9 @@ export class SequentialNamingScanner {
         const { sourceDir, lastProcessedFile } = params;
         const lastProcessedPath = lastProcessedFile ? getPathElements(lastProcessedFile) : undefined;
 
-        const dirEntries = await fs.readdir(sourceDir, { withFileTypes: true });
+        const dirEntries = (await fs.readdir(sourceDir, { withFileTypes: true })).filter(
+            (entry) => !(entry.isDirectory() && this.ignoreDirs.includes(entry.name))
+        );
         dirEntries.sort((a, b) => StringUtils.compare(a.name, b.name));
 
         const unprocessedEntries = this.getUnprocessedEntries(

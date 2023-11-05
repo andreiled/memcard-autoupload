@@ -3,13 +3,13 @@ import { expect } from "chai";
 import { SequentialNamingScanner } from "../../src/scanner";
 
 describe("SequentialNamingScanner", () => {
-    const scanner = new SequentialNamingScanner();
+    const scanner = new SequentialNamingScanner({ ignoreDirs: ["test-ignore-dir"] });
 
     describe("findNewFiles", () => {
         describe("Given never processed directory with sub-directories containing files", () => {
             const sourceDir = `${__dirname}/.resources`;
 
-            it("Should return all files in all diratories", async () => {
+            it("Should return all files in all directories except for the ignored directory", async () => {
                 expect([...(await scanner.findNewFiles({ sourceDir }))])
                     .to.have.lengthOf(8)
                     .and.to.have.ordered.members([
@@ -19,7 +19,7 @@ describe("SequentialNamingScanner", () => {
             });
         });
 
-        describe("First sub-directory was partially processed before", () => {
+        describe("Given first sub-directory was partially processed before", () => {
             const sourceDir = `${__dirname}/.resources`;
 
             it("Should return all new files form the first sub-directory and all files from the second sub-directory", async () => {
@@ -32,7 +32,7 @@ describe("SequentialNamingScanner", () => {
             });
         });
 
-        describe("First sub-directory was fully processed before", () => {
+        describe("Given first sub-directory was fully processed before", () => {
             const sourceDir = `${__dirname}/.resources`;
 
             it("Should return all files from the second sub-directory", async () => {
@@ -42,7 +42,7 @@ describe("SequentialNamingScanner", () => {
             });
         });
 
-        describe("Last sub-directory was partially processed before", () => {
+        describe("Given last sub-directory was partially processed before", () => {
             const sourceDir = `${__dirname}/.resources`;
 
             it("Should return all new files from the last sub-directory", async () => {
@@ -52,7 +52,7 @@ describe("SequentialNamingScanner", () => {
             });
         });
 
-        describe("Last sub-directory was fully processed before", () => {
+        describe("Given last sub-directory was fully processed before", () => {
             const sourceDir = `${__dirname}/.resources`;
 
             it("Should return no files", async () => {
