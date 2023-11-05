@@ -23,6 +23,11 @@ export interface ScanParams {
  * in order to identify all files newer than some previously processed file.
  */
 export class SequentialNamingScanner {
+    /**
+     * @param params
+     * @returns a `Promise` that resolves to an array of all new files' paths [relative to the specified source directory]
+     * in an ascending lexicographical order.
+     */
     public async findNewFiles(params: ScanParams): Promise<string[]> {
         const { sourceDir, lastProcessedFile } = params;
         const lastProcessedPath = lastProcessedFile ? getPathElements(lastProcessedFile) : undefined;
@@ -46,9 +51,9 @@ export class SequentialNamingScanner {
                             lastProcessedFile: pathStartsWith(lastProcessedPath, entry.name)
                                 ? lastProcessedPath?.slice(1)
                                 : undefined,
-                        });
+                        }).then((files) => files.map((file) => `${entry.name}/${file}`));
                     } else if (entry.isFile()) {
-                        return Promise.resolve([`${sourceDir}/${entry.name}`]);
+                        return Promise.resolve([entry.name]);
                     } else {
                         console.info(
                             "[%s] Skip unsupported directory entry type (neither a normal directory nor a normal file): %s",
