@@ -1,0 +1,5 @@
+# Let npm fully own formatting of package-lock.json
+package-lock.json
+
+# Ignore build artifacts
+dist
