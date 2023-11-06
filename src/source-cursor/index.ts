@@ -23,8 +23,8 @@ const CURSOR_FILE = ".auto-download/cursor.json";
 export async function readDirectoryCursor(dir: string): Promise<CursorPosition | undefined> {
     try {
         return JSON.parse((await fs.readFile(`${dir}/${CURSOR_FILE}`, { encoding: "utf8" })).toString());
-    } catch (error: any) {
-        if (error?.code === "ENOENT") {
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException)?.code === "ENOENT") {
             return undefined;
         } else {
             throw error;
