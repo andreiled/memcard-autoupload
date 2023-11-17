@@ -1,0 +1,7 @@
+{
+  "DCIM": {
+    "target": {
+      "root": "/etc/all-my-photos"
+    }
+  }
+}
