@@ -6,6 +6,7 @@ import {
     findAllSupportedSourceDirs,
     readAutoDownloadConfiguration,
 } from "./configuration";
+import { GroupByDatePlacementStrategy, TargetPlacementStrategy } from "./placement-strategy";
 
 export class Downloader {
     private readonly configurationPromise: Promise<DriveDownloadConfiguration> = readAutoDownloadConfiguration();
@@ -55,8 +56,10 @@ export class Downloader {
         if (newFiles.length > 0) {
             console.info("[%s] Found %i new files", sourceDir, newFiles.length);
 
+            const placementStrategy = this.resolveTargetPlacementStrategy(configuration.target);
             for (const file of newFiles) {
-                console.log("[%s] Copy %s to %s", sourceDir, file, configuration.target.root);
+                const targetFilePath = await placementStrategy.resolveTargetPath(`${sourceDir}/${file}`);
+                console.log("[%s] Copy %s to %s", sourceDir, file, targetFilePath);
             }
 
             const lastProcessedFile = newFiles[newFiles.length - 1];
@@ -72,5 +75,10 @@ export class Downloader {
         } else {
             console.info("[%s] No new files found: do nothing", sourceDir);
         }
+    }
+
+    private resolveTargetPlacementStrategy(target: DirectoryDownloadConfig["target"]): TargetPlacementStrategy {
+        // TODO: can check the type of the target configuration here.
+        return new GroupByDatePlacementStrategy(target.root);
     }
 }
