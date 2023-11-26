@@ -1,3 +1,4 @@
+import path from "node:path";
 import { SequentialNamingScanner } from "../scanner";
 import { readDirectoryCursor, saveDirectoryCursor } from "../source-cursor";
 import {
@@ -6,10 +7,22 @@ import {
     findAllSupportedSourceDirs,
     readAutoDownloadConfiguration,
 } from "./configuration";
+import { FileCopier } from "./file-copier";
 import { GroupByDatePlacementStrategy, TargetPlacementStrategy } from "./placement-strategy";
 
 export class Downloader {
     private readonly configurationPromise: Promise<DriveDownloadConfiguration> = readAutoDownloadConfiguration();
+    private readonly fileCopier: FileCopier = new FileCopier({
+        async onTargetAlreadyExists(sourceFile, targetFile) {
+            console.warn(
+                "%s already exists in %s: skip copying %s",
+                path.basename(targetFile),
+                path.dirname(targetFile),
+                sourceFile
+            );
+            return { action: "skip" };
+        },
+    });
 
     /**
      * Download all new files from all supported directories in the specified 'drive' directory.
@@ -54,12 +67,13 @@ export class Downloader {
         });
 
         if (newFiles.length > 0) {
-            console.info("[%s] Found %i new files", sourceDir, newFiles.length);
+            console.info("[%s] Found %i new files in total (in this source directory)", sourceDir, newFiles.length);
 
             const placementStrategy = this.resolveTargetPlacementStrategy(configuration.target);
-            for (const file of newFiles) {
-                const targetFilePath = await placementStrategy.resolveTargetPath(`${sourceDir}/${file}`);
-                console.log("[%s] Copy %s to %s", sourceDir, file, targetFilePath);
+            for (const fileRelativePath of newFiles) {
+                const targetFilePath = await placementStrategy.resolveTargetPath(`${sourceDir}/${fileRelativePath}`);
+                console.log("[%s] Copy %s to %s", sourceDir, fileRelativePath, targetFilePath);
+                await this.fileCopier.copy(`${sourceDir}/${fileRelativePath}`, targetFilePath);
             }
 
             const lastProcessedFile = newFiles[newFiles.length - 1];
