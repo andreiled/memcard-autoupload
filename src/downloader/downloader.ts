@@ -9,16 +9,16 @@ import {
 } from "./configuration";
 import { FileCopier } from "./file-copier";
 import { GroupByDatePlacementStrategy, TargetPlacementStrategy } from "./placement-strategy";
+import { ProgressTracker } from "./progress";
 
 export class Downloader {
     private readonly configurationPromise: Promise<DriveDownloadConfiguration> = readAutoDownloadConfiguration();
+
+    private readonly progressTracker = new ProgressTracker();
     private readonly fileCopier: FileCopier = new FileCopier({
-        async onTargetAlreadyExists(sourceFile, targetFile) {
-            console.warn(
-                "%s already exists in %s: skip copying %s",
-                path.basename(targetFile),
-                path.dirname(targetFile),
-                sourceFile
+        onTargetAlreadyExists: async (sourceFile, targetFile) => {
+            this.progressTracker.log(
+                `${path.basename(targetFile)} already exists in ${path.dirname(targetFile)}: skip copying ${sourceFile}`
             );
             return { action: "skip" };
         },
@@ -47,6 +47,8 @@ export class Downloader {
                 // to avoid having multiple 'threads' reading and writing from/to the same physical device.
                 await this.downloadNewFilesFromDir(sourceDir, dirDownloadConfig);
             }
+
+            this.progressTracker.stop();
         } else {
             console.warn("[%s] Could not find any supported directories: do nothing", drivePath);
         }
@@ -55,9 +57,8 @@ export class Downloader {
     private async downloadNewFilesFromDir(sourceDir: string, configuration: DirectoryDownloadConfig) {
         const cursor = await readDirectoryCursor(sourceDir);
         if (!cursor) {
-            console.warn(
-                "[%s] Cursor file not found: this appears to be the first time we are processing this directory",
-                sourceDir
+            this.progressTracker.log(
+                `[${sourceDir}] Cursor file not found: this appears to be the first time we are processing this directory`
             );
         }
 
@@ -67,27 +68,34 @@ export class Downloader {
         });
 
         if (newFiles.length > 0) {
-            console.info("[%s] Found %i new files in total (in this source directory)", sourceDir, newFiles.length);
+            this.progressTracker.log(
+                `[${sourceDir}] Found ${newFiles.length} new files in total (in this source directory)`
+            );
+            const progressBar = this.progressTracker.startTracking(sourceDir, newFiles.length);
 
             const placementStrategy = this.resolveTargetPlacementStrategy(configuration.target);
             for (const fileRelativePath of newFiles) {
                 const targetFilePath = await placementStrategy.resolveTargetPath(`${sourceDir}/${fileRelativePath}`);
-                console.log("[%s] Copy %s to %s", sourceDir, fileRelativePath, targetFilePath);
+
+                progressBar.setStatusSummary(`${fileRelativePath} => ${targetFilePath}`);
                 await this.fileCopier.copy(`${sourceDir}/${fileRelativePath}`, targetFilePath);
+                progressBar.increment();
             }
 
             const lastProcessedFile = newFiles[newFiles.length - 1];
-            console.info("[%s] Save final cursor position: %s", sourceDir, lastProcessedFile);
+            progressBar.setStatusSummary(`Saving final cursor position: ${lastProcessedFile}`);
 
-            saveDirectoryCursor(sourceDir, {
+            await saveDirectoryCursor(sourceDir, {
                 ...cursor,
                 sequential: {
                     ...cursor?.sequential,
                     lastProcessedFile,
                 },
             });
+            progressBar.setStatusSummary(`Saved final cursor position: ${lastProcessedFile}`);
+            progressBar.stop();
         } else {
-            console.info("[%s] No new files found: do nothing", sourceDir);
+            this.progressTracker.log(`[${sourceDir}] No new files found`);
         }
     }
 
