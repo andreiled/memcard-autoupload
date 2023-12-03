@@ -1,13 +1,11 @@
 import { program } from "commander";
 import { downloadAllNewFiles } from "./actions/download";
+import { initAutoDownloadConfiguration } from "./actions/init";
 
 program
     .command("init")
     .description("Initialize a global configuration")
-    .action(async () => {
-        // TODO: initialize configuration.
-        throw new Error("Not implemented yet");
-    });
+    .action(initAutoDownloadConfiguration);
 
 program
     .description(
