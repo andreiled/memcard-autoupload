@@ -1,8 +1,12 @@
 import * as fs from "node:fs/promises";
 import path from "node:path";
-import { DirectoryDownloadConfig, DriveDownloadConfiguration, readAutoDownloadConfiguration } from "../configuration";
-import { SequentialNamingScanner } from "../scanner";
-import { readDirectoryCursor, saveDirectoryCursor } from "../source-cursor";
+import {
+    DirectoryDownloadConfig,
+    DriveDownloadConfiguration,
+    readAutoDownloadConfiguration,
+} from "../../configuration";
+import { SequentialNamingScanner } from "../../scanner";
+import { readDirectoryCursor, saveDirectoryCursor } from "../../source-cursor";
 import { FileCopier } from "./file-copier";
 import { GroupByDatePlacementStrategy, TargetPlacementStrategy } from "./placement-strategy";
 import { ProgressTracker } from "./progress";

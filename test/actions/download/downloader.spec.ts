@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { DirectoryDownloadConfig } from "../../src/configuration";
-import { findAllSupportedSourceDirs } from "../../src/downloader";
+import { DirectoryDownloadConfig } from "../../../src/configuration";
+import { findAllSupportedSourceDirs } from "../../../src/actions/download/downloader";
 
 describe("findAllSupportedSourceDirs", () => {
     const testConfiguration = {
