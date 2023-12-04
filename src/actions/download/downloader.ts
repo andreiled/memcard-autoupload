@@ -1,12 +1,12 @@
+import * as fs from "node:fs/promises";
 import path from "node:path";
-import { SequentialNamingScanner } from "../scanner";
-import { readDirectoryCursor, saveDirectoryCursor } from "../source-cursor";
 import {
     DirectoryDownloadConfig,
     DriveDownloadConfiguration,
-    findAllSupportedSourceDirs,
     readAutoDownloadConfiguration,
-} from "./configuration";
+} from "../../configuration";
+import { SequentialNamingScanner } from "../../scanner";
+import { readDirectoryCursor, saveDirectoryCursor } from "../../source-cursor";
 import { FileCopier } from "./file-copier";
 import { GroupByDatePlacementStrategy, TargetPlacementStrategy } from "./placement-strategy";
 import { ProgressTracker } from "./progress";
@@ -103,4 +103,33 @@ export class Downloader {
         // TODO: can check the type of the target configuration here.
         return new GroupByDatePlacementStrategy(target.root);
     }
+}
+
+// TODO: I wonder if there's a nicer way to put this function: one one hand:
+// * it is nice to test its behavior on its own, so making it a method in the `Downloader` class does not look right
+// * on the other hand, this function does not make much sense outside of its ues by `Downloader`
+export async function findAllSupportedSourceDirs(
+    drivePath: string,
+    configuration: DriveDownloadConfiguration
+): Promise<[string, DirectoryDownloadConfig][]> {
+    return (
+        await Promise.all(
+            Object.entries(configuration).map(
+                async ([sourceDir, dirDownloadConfig]): Promise<[string, DirectoryDownloadConfig] | undefined> => {
+                    const sourceDirPath = `${drivePath}/${sourceDir}`;
+                    try {
+                        await fs.access(sourceDirPath, fs.constants.R_OK | fs.constants.W_OK);
+                    } catch (error) {
+                        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+                            return undefined;
+                        } else {
+                            throw error;
+                        }
+                    }
+
+                    return [sourceDirPath, dirDownloadConfig];
+                }
+            )
+        )
+    ).filter((it) => !!it) as [string, DirectoryDownloadConfig][];
 }

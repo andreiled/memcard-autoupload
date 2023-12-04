@@ -1,6 +1,6 @@
 import { Stats } from "node:fs";
 import * as fs from "node:fs/promises";
-import { GroupByDatePlacementStrategy } from "../../src/downloader/placement-strategy";
+import { GroupByDatePlacementStrategy } from "../../../src/actions/download/placement-strategy";
 
 jest.mock("node:fs/promises");
 

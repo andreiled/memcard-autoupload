@@ -1,6 +1,6 @@
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
-import { FileCopier } from "../../src/downloader/file-copier";
+import { FileCopier } from "../../../src/actions/download/file-copier";
 
 jest.mock("node:fs/promises");
 
