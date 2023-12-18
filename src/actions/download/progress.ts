@@ -34,6 +34,10 @@ export class ProgressTracker {
     }
 
     public stop() {
+        // Force flush all custom log messages if they were not flushed yet.
+        // https://github.com/npkgz/cli-progress/issues/145
+        this.multiBar.update();
+
         this.multiBar.stop();
     }
 }
